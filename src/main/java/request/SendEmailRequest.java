@@ -1,21 +1,24 @@
 package request;
 
-public class EmailRequest {
+public class SendEmailRequest {
 
     private String sender;
-    private String recipient;
+    private String[] recipients;
     private String subject;
     private String textBody;
     private String htmlBody;
+    private String attachmentFilePath;
 
-    public EmailRequest() {}
 
-    public EmailRequest(String sender, String recipient, String subject, String textBody, String htmlBody) {
+    public SendEmailRequest() {}
+
+    public SendEmailRequest(String sender, String[] recipients, String subject, String textBody, String htmlBody, String attachmentFilePath) {
         this.sender = sender;
-        this.recipient = recipient;
+        this.recipients = recipients;
         this.subject = subject;
         this.textBody = textBody;
         this.htmlBody = htmlBody;
+        this.attachmentFilePath = attachmentFilePath;
     }
 
     public String getSender() {
@@ -26,12 +29,12 @@ public class EmailRequest {
         this.sender = sender;
     }
 
-    public String getRecipient() {
-        return recipient;
+    public String[] getRecipients() {
+        return recipients;
     }
 
-    public void setRecipient(String recipient) {
-        this.recipient = recipient;
+    public void setRecipients(String[] recipients) {
+        this.recipients = recipients;
     }
 
     public String getSubject() {
@@ -58,4 +61,11 @@ public class EmailRequest {
         this.htmlBody = htmlBody;
     }
 
+    public String getAttachmentFilePath() {
+        return attachmentFilePath;
+    }
+
+    public void setAttachmentFilePath(String attachmentFilePath) {
+        this.attachmentFilePath = attachmentFilePath;
+    }
 }

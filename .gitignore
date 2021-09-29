@@ -2,3 +2,5 @@ target
 .idea
 dependency-reduced-pom.xml
 pitchdeck-server.iml
+tmp
+powerpoint.iml

@@ -1,15 +1,15 @@
-package response;
+package result;
 
-public class EmailResult extends Response {
+public class SendEmailResult extends Result {
 
     private String timestamp; //property for returning the date/time at which the email was sent.
 
-    public EmailResult(boolean success, String message, String timestamp) {
+    public SendEmailResult(boolean success, String message, String timestamp) {
         super(success, message);
         this.timestamp = timestamp;
     }
 
-    public EmailResult() {}
+    public SendEmailResult() {}
 
     public String getTimestamp() {
         return timestamp;

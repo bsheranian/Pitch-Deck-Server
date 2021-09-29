@@ -1,68 +1,80 @@
 package service;
 
-import Utils.DeckManipulator;
-import Utils.PowerPointStrategy;
+import exception.DAOException;
+import result.SendEmailResult;
+import result.Result;
+import utils.PresentationBuilder;
+import utils.PowerPointStrategy;
 import dao.SlideTemplateDAO;
-import model.Deck;
 import model.Slide;
-import org.apache.poi.xslf.usermodel.*;
 import request.CreateTeamSlideRequest;
-import request.EmailRequest;
-
-import java.io.FileInputStream;
+import request.SendEmailRequest;
 
 
+import java.io.IOException;
+import java.io.InputStream;
 
-public class CreateTeamSlideService extends ServiceTemplate<CreateTeamSlideRequest, Void> {
 
-    private String filePath = "/Users/sheranian/Desktop/Untitled presentation.pptx";
+public class CreateTeamSlideService extends ServiceTemplate<CreateTeamSlideRequest, Result> {
+
+    private final String COMPANY_EMAIL = "bsheranian1@gmail.com";
+    private final String EMAIL_SUBJECT = "Here's your team slides!";
+    private final String EMAIL_BODY = "Hello,\r\n"
+            + "Please see the attached file for your newly created team slide.";
+    private final String EMAIL_HTML = "<html>"
+            + "<head></head>"
+            + "<body>"
+            + "<h1>Hello!</h1>"
+            + "<p>Please see the attached file for a "
+            + "list of customers to contact.</p>"
+            + "</body>"
+            + "</html>";
+
 
     @Override
-    public Void doRequest(CreateTeamSlideRequest request) {
+    public Result doRequest(CreateTeamSlideRequest request) throws DAOException {
+        System.out.println("Entering CreatTeamSlideRequest");
 
-        DeckManipulator deckManipulator = new DeckManipulator(new PowerPointStrategy());
-
-        deckManipulator.createDeck();
+        PresentationBuilder masterTemplates = null;
 
         try {
-            Deck importedDeck = new SlideTemplateDAO().getDeck();
-            DeckManipulator importedDeckManipulator = new DeckManipulator(new PowerPointStrategy());
-            importedDeckManipulator.setDeck(importedDeck);
-            Slide importedSlide = importedDeckManipulator.getSlide(0);
-            deckManipulator.appendSlide(importedSlide);
-
+            InputStream masterSlidesInputStream = new SlideTemplateDAO().getMasterTemplates();
+            masterTemplates = new PresentationBuilder(new PowerPointStrategy());
+            masterTemplates.importPresentationFromInputStream(masterSlidesInputStream);
         } catch (Exception e) {
-
+            return new Result(false, "Could not access master slide templates: " + e.getMessage());
         }
 
-        new EmailService().doRequest(new EmailRequest());
+        String filePath = String.format("/tmp/%s_TeamSlides.pptx", request.getClientName());
 
-//        XSLFSlideMaster defaultMaster = ppt.getSlideMasters().get(0);
-//
-//        XSLFSlideLayout layout
-//                = defaultMaster.getLayout(SlideLayout.TITLE_AND_CONTENT);
-//        XSLFSlide slide = ppt.createSlide(layout);
+        PresentationBuilder pb = new PresentationBuilder(new PowerPointStrategy());
 
-//        XSLFTextShape titleShape = slide.getPlaceholder(0);
-//        XSLFTextShape contentShape = slide.getPlaceholder(1);
-//
-//        for (XSLFShape shape : slide.getShapes()) {
-//            if (shape instanceof XSLFAutoShape) {
-//                // this is a template placeholder
-//            }
-//        }
+        pb.createPresentation();
+        pb.setPageSize(masterTemplates.getPageSize());
 
+        Slide template = masterTemplates.getSlide(0);
+        pb.appendSlide(template);
 
+        try {
+            pb.saveToFile(filePath);
+        } catch (IOException e) {
+            return new Result(false, "Could not save presentation: " + e.getMessage());
+        }
 
+        SendEmailRequest sendEmailRequest = new SendEmailRequest();
+        sendEmailRequest.setRecipients(new String[]{request.getClientEmail()});
+        sendEmailRequest.setSender(COMPANY_EMAIL);
+        sendEmailRequest.setSubject(EMAIL_SUBJECT);
+        sendEmailRequest.setTextBody(EMAIL_BODY);
+        sendEmailRequest.setHtmlBody(EMAIL_HTML);
+        sendEmailRequest.setAttachmentFilePath(filePath);
 
-            // get slide from existing PPT and paste it into current PPT
+        SendEmailResult sendEmailResult = new SendEmailService().doRequest(sendEmailRequest);
 
-//            ppt.createSlide().importContent(slide1);
-
-            // save current PTT
-
-
-
-        return null;
+        if (sendEmailResult.isSuccess()) {
+            return new Result(true, "Team slide created and sent successfully.");
+        } else {
+            return new Result(false, "Email failed: " + sendEmailResult.getMessage());
+        }
     }
 }

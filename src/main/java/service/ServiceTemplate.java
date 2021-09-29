@@ -1,10 +1,11 @@
 package service;
 
 
+import exception.DAOException;
 
 public abstract class ServiceTemplate<T, V> {
 
-    public abstract V doRequest(T request);
+    public abstract V doRequest(T request) throws DAOException;
 
 //    /**
 //     * Returns an instance of {@link AuthDAO}. Allows mocking of the AuthDAO class

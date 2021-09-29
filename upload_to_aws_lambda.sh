@@ -22,7 +22,6 @@ case "$1" in
   -all)
     lamdaFunctions=(
       "createTeamSlide"
-      "sendEmail"
     ) ;;
 esac
 
